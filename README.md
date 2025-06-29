@@ -81,6 +81,7 @@ The project requires several environment variables for:
 - Input validation and sanitization
 
 ##Made By Christopher Joshy
+##broken on mobile
 
 ## 📝 License
 This project is licensed under the MIT License - see the LICENSE file for details. 
