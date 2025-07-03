@@ -35,7 +35,7 @@ export class TerminalAudio {
       oscillator.connect(gainNode);
       gainNode.connect(this.audioContext.destination);
       
-      // Random pitch for natural typing sound
+      
       oscillator.frequency.setValueAtTime(
         800 + Math.random() * 200, 
         this.audioContext.currentTime

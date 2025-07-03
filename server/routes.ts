@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { seedDatabase } from "./seed-data";
+
 import { 
   insertProjectSchema,
   insertSkillSchema,
@@ -320,20 +320,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Seed database route - for initial setup
-  app.post("/api/admin/seed", requireAdmin, async (req, res) => {
-    try {
-      const success = await seedDatabase();
-      if (success) {
-        res.json({ success: true, message: "Database seeded successfully!" });
-      } else {
-        res.status(500).json({ success: false, message: "Database seeding failed" });
-      }
-    } catch (error) {
-      console.error('Seeding error:', error);
-      res.status(500).json({ success: false, message: "Database seeding failed" });
-    }
-  });
+  // Data seeding endpoint removed
 
   const httpServer = createServer(app);
   return httpServer;

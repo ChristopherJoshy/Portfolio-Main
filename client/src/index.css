@@ -23,6 +23,8 @@
   --destructive-foreground: hsl(0, 0%, 100%);
   --ring: hsl(0, 0%, 100%);
   --radius: 0rem;
+  --link: hsl(210, 100%, 60%);
+  --link-hover: hsl(210, 100%, 70%);
 }
 
 @layer base {
@@ -119,6 +121,36 @@
 
   .prompt-symbol {
     color: #ffffff;
+  }
+
+  .terminal-line {
+    display: block;
+    white-space: pre-wrap;
+  }
+
+  .terminal-line a {
+    color: var(--link);
+    text-decoration: none;
+    cursor: pointer;
+    padding: 0.1em 0.3em;
+    margin: -0.1em -0.3em;
+    border-radius: 0.2em;
+    transition: all 0.2s ease;
+  }
+
+  .terminal-line a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .terminal-line a:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  }
+
+  .terminal-line a:active {
+    transform: translateY(1px);
   }
 }
 

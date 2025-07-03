@@ -53,10 +53,42 @@ export function TerminalEmulator() {
         );
       
       case 'output':
+        // Handle clickable links in output
+        const processedContent = line.content.split('\n').map((textLine, idx) => {
+          // Check for URLs in the line
+          const urlRegex = /(https?:\/\/[^\s]+)/g;
+          const parts = textLine.split(urlRegex);
+          
+          return (
+            <div key={idx} className="terminal-line">
+              {parts.map((part, partIdx) => {
+                if (part.match(urlRegex)) {
+                  return (
+                    <a
+                      key={partIdx}
+                      href={part}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.open(part, '_blank');
+                      }}
+                      className="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer"
+                    >
+                      {part}
+                    </a>
+                  );
+                }
+                return <span key={partIdx}>{part}</span>;
+              })}
+            </div>
+          );
+        });
+
         return (
           <div key={line.id} className="terminal-output mb-2">
             <pre className="text-white whitespace-pre-wrap font-mono">
-              {line.content}
+              {processedContent}
             </pre>
           </div>
         );

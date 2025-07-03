@@ -29,4 +29,5 @@ export const collections = {
   bio: 'bio',
   githubStats: 'githubStats',
   asciiArt: 'asciiArt',
+  resume: 'resume'
 } as const;

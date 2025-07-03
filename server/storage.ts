@@ -7,6 +7,7 @@ import {
   Bio, 
   GithubStats, 
   AsciiArt,
+  Resume,
   InsertProject,
   InsertSkill,
   InsertCertificate,
@@ -14,7 +15,8 @@ import {
   InsertMessage,
   InsertBio,
   InsertGithubStats,
-  InsertAsciiArt
+  InsertAsciiArt,
+  InsertResume
 } from "@shared/schema";
 import { db, collections } from "./firebase";
 
@@ -65,6 +67,10 @@ export interface IStorage {
   createAsciiArt(art: InsertAsciiArt): Promise<AsciiArt>;
   updateAsciiArt(id: string, art: Partial<InsertAsciiArt>): Promise<AsciiArt>;
   deleteAsciiArt(id: string): Promise<void>;
+
+  // Resume
+  getResume(): Promise<Resume | undefined>;
+  updateResume(resume: InsertResume): Promise<Resume>;
 }
 
 export class FirestoreStorage implements IStorage {
@@ -280,6 +286,41 @@ export class FirestoreStorage implements IStorage {
 
   async deleteAsciiArt(id: string): Promise<void> {
     await db.collection(collections.asciiArt).doc(id).delete();
+  }
+
+  // Resume
+  async getResume(): Promise<Resume | undefined> {
+    const doc = await db.collection(collections.resume).doc('current').get();
+    if (!doc.exists) return undefined;
+    
+    // Get GitHub stats to include in response
+    const githubStats = await this.getGithubStats();
+    const resumeData = doc.data() as Resume;
+    
+    return {
+      ...resumeData,
+      githubStats: githubStats ? {
+        stars: githubStats.stars,
+        commits: githubStats.commits,
+        repos: githubStats.repos,
+        followers: githubStats.followers,
+        pullRequests: githubStats.pullRequests,
+        issues: githubStats.issues
+      } : undefined
+    };
+  }
+
+  async updateResume(resume: InsertResume): Promise<Resume> {
+    const data = {
+      ...resume,
+      lastUpdated: new Date()
+    };
+    
+    await db.collection(collections.resume).doc('current').set(data);
+    return {
+      id: 'current',
+      ...data
+    } as Resume;
   }
 }
 

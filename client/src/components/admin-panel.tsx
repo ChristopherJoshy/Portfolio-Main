@@ -5,9 +5,20 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { X, Eye, Edit, Trash2, Plus, RefreshCw, Database } from 'lucide-react';
+import { X, Eye, Edit, Trash2, Plus, RefreshCw } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { AddProjectForm, AddSkillForm, AddSocialLinkForm, EditBioForm, EditStatsForm, AddCertificateForm } from './admin-forms';
+import { 
+  AddProjectForm, 
+  AddSkillForm, 
+  AddSocialLinkForm, 
+  EditBioForm, 
+  EditStatsForm, 
+  AddCertificateForm,
+  EditProjectForm,
+  EditSkillForm,
+  EditCertificateForm
+} from './admin-forms';
+import { EditSocialLinkForm } from './admin-edit-social-link-form';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -30,8 +41,12 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
   const [showAddSocial, setShowAddSocial] = useState(false);
   const [showEditBio, setShowEditBio] = useState(false);
   const [showEditStats, setShowEditStats] = useState(false);
-  const [seeding, setSeeding] = useState(false);
   const [isAddCertificateOpen, setIsAddCertificateOpen] = useState(false);
+  
+  // New state variables for edit forms
+  const [editingProject, setEditingProject] = useState<any>(null);
+  const [editingSkill, setEditingSkill] = useState<any>(null);
+  const [editingCertificate, setEditingCertificate] = useState<any>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -92,30 +107,19 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
   };
 
   const handleEditProject = (project: any) => {
-    alert(`Edit Project: ${project.title}\n\nID: ${project.id}\nStatus: ${project.status}\nDescription: ${project.description}`);
+    setEditingProject(project);
   };
 
   const handleEditSkill = (skill: any) => {
-    alert(`Edit Skill: ${skill.name}\n\nCategory: ${skill.category}\nProficiency: ${skill.proficiency}%\nExperience: ${skill.yearsOfExperience} years`);
+    setEditingSkill(skill);
   };
 
   const handleEditSocialLink = (link: any) => {
     alert(`Edit Social Link: ${link.displayName}\n\nPlatform: ${link.platform}\nUsername: ${link.username}\nURL: ${link.url}`);
   };
 
-  const handleSeedDatabase = async () => {
-    if (!confirm('This will populate the database with sample data. Continue?')) return;
-    
-    setSeeding(true);
-    try {
-      await apiRequest('POST', '/api/admin/seed');
-      await loadData();
-      alert('Database seeded successfully!');
-    } catch (error) {
-      alert('Failed to seed database');
-    } finally {
-      setSeeding(false);
-    }
+  const handleEditCertificate = (certificate: any) => {
+    setEditingCertificate(certificate);
   };
 
   const handleFormSuccess = () => {
@@ -145,18 +149,6 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
             🛠️ Admin Control Panel
           </CardTitle>
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={(e) => {
-                e.preventDefault();
-                handleSeedDatabase();
-              }}
-              disabled={seeding}
-            >
-              <Database className="h-4 w-4 mr-1" />
-              {seeding ? 'Seeding...' : 'Seed Data'}
-            </Button>
             <Button variant="outline" size="sm" onClick={(e) => {
               e.preventDefault();
               loadData();
@@ -421,7 +413,7 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
                                 variant="outline"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleViewItem('Certificate', cert);
+                                  handleEditCertificate(cert);
                                 }}
                               >
                                 <Edit className="h-3 w-3" />
@@ -694,6 +686,26 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
         isOpen={isAddCertificateOpen}
         onClose={() => setIsAddCertificateOpen(false)}
         onSuccess={handleFormSuccess}
+      />
+
+      {/* Edit Forms */}
+      <EditProjectForm
+        isOpen={!!editingProject}
+        onClose={() => setEditingProject(null)}
+        onSuccess={handleFormSuccess}
+        project={editingProject}
+      />
+      <EditSkillForm
+        isOpen={!!editingSkill}
+        onClose={() => setEditingSkill(null)}
+        onSuccess={handleFormSuccess}
+        skill={editingSkill}
+      />
+      <EditCertificateForm
+        isOpen={!!editingCertificate}
+        onClose={() => setEditingCertificate(null)}
+        onSuccess={handleFormSuccess}
+        certificate={editingCertificate}
       />
     </div>
   );

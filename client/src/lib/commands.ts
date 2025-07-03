@@ -48,8 +48,6 @@ export class TerminalCommands {
           return context.isAdminMode ? this.handleUpdate(args) : this.commandNotFound(cmd);
         case 'view':
           return context.isAdminMode ? this.handleView(args) : this.commandNotFound(cmd);
-        case 'seed':
-          return context.isAdminMode ? this.handleSeed(args) : this.commandNotFound(cmd);
         
         // Linux-like commands
         case 'echo':
@@ -83,47 +81,49 @@ export class TerminalCommands {
   private handleHelp(context: CommandContext): CommandResult {
     if (context.isAdminMode) {
       return {
-        output: `🛠️  Admin Commands Available:
-
-Content Management:
-  add project         → Add new project with ASCII banner
-  edit project <id>   → Edit existing project details
-  delete project <id> → Remove project from database
-  add skill           → Add new skill to tech stack
-  add certificate     → Add new certification
-  update social <platform> → Update social media links
-  update bio          → Edit about section content
-  
-System Management:
-  view messages       → Read contact form submissions
-  delete message <id> → Remove contact message
-  update stats        → Refresh GitHub statistics
-  update ascii        → Edit fastfetch ASCII art
-  backup data         → Export all data to JSON
-  
-Session:
-  exit               → Exit admin mode
-  logout             → End admin session
-
-⚠️  All changes are immediately saved to Firebase Firestore.`,
+        output: `🛠️  Admin Commands\n│\n` +
+        `│ Content Management\n` +
+        `│ ├─ add project         → Add new project with ASCII banner\n` +
+        `│ ├─ edit project <id>   → Edit existing project details\n` +
+        `│ ├─ delete project <id> → Remove project from database\n` +
+        `│ ├─ add skill           → Add new skill to tech stack\n` +
+        `│ ├─ add certificate     → Add new certification\n` +
+        `│ ├─ update social <platform> → Update social media links\n` +
+        `│ └─ update bio          → Edit about section content\n` +
+        `│\n` +
+        `│ System Management\n` +
+        `│ ├─ view messages       → Read contact form submissions\n` +
+        `│ ├─ delete message <id> → Remove contact message\n` +
+        `│ ├─ update stats        → Refresh GitHub statistics\n` +
+        `│ └─ update ascii        → Edit fastfetch ASCII art\n` +
+        `│\n` +
+        `│ Session\n` +
+        `│ ├─ exit               → Exit admin mode\n` +
+        `│ └─ logout             → End admin session\n` +
+        `│\n` +
+        `│ ⚠️  All changes are immediately saved to Firebase Firestore.`,
         success: true
       };
     }
 
     return {
-      output: `Available Commands:
-  help       → Show this command list
-  about      → Display bio and background  
-  skills     → List current tech stack
-  projects   → List and view project details
-  contact    → Fill and submit contact message
-  resume     → Show GitHub stats and resume link (not implemented yet)
-  social     → Show Gmail, GitHub, LinkedIn, Instagram
-  fastfetch  → Display ASCII system info (like neofetch)
-  clear      → Clear the terminal screen
-  sudo hire-christopher → Fun easter egg output
-
-Type any command to get started. Pro tip: Use ↑ ↓ for command history.`,
+      output: `📋 Available Commands\n│\n` +
+        `│ Navigation\n` +
+        `│ ├─ help       → Show this command list\n` +
+        `│ ├─ clear      → Clear the terminal screen\n` +
+        `│ └─ exit       → Exit the terminal\n` +
+        `│\n` +
+        `│ Portfolio\n` +
+        `│ ├─ about      → Display bio and background\n` +
+        `│ ├─ skills     → List current tech stack\n` +
+        `│ ├─ projects   → List and view project details\n` +
+        `│ ├─ contact    → Fill and submit contact message\n` +
+        `│ ├─ resume     → Show GitHub stats and resume link\n` +
+        `│ ├─ social     → Show Gmail, GitHub, LinkedIn, Instagram\n` +
+        `│ └─ fastfetch  → Display ASCII system info\n` +
+        `│\n` +
+        `│ Pro tip: Use ↑ ↓ for command history\n` +
+        `│ Easter egg: Try 'sudo hire-christopher'`,
       success: true
     };
   }
@@ -135,16 +135,16 @@ Type any command to get started. Pro tip: Use ↑ ↓ for command history.`,
       
       if (!bio || !bio.content) {
         return {
-          output: `No bio information available. Use the admin panel to add bio content.
-Run "admin <password>" to access admin mode.`,
+          output: `No bio information available. Use the admin panel to add bio content.\nRun "admin <password>" to access admin mode.`,
           success: false
         };
       }
 
+      const output = `👨‍💻 About Me\n│\n`;
+      const lines = bio.content.split('\n').map((line: string) => `│ ${line}`).join('\n');
+      
       return {
-        output: `${bio.content}
-
-Last updated: ${bio.lastUpdated ? new Date(bio.lastUpdated).toLocaleDateString() : 'Unknown'}`,
+        output: output + lines + `\n│\n│ Last updated: ${bio.lastUpdated ? new Date(bio.lastUpdated).toLocaleDateString() : 'Unknown'}`,
         success: true
       };
     } catch (error) {
@@ -167,33 +167,95 @@ Last updated: ${bio.lastUpdated ? new Date(bio.lastUpdated).toLocaleDateString()
         };
       }
 
-      let output = 'Analyzing skill database...\n';
-      output += '[████████████████████████████████████████████████████] 100%\n\n';
-      output += '💻 Technical Skills:\n\n';
+      const WIDTH = 90;
+      let output = '💻 Technical Skills\n│\n';
 
-      Object.entries(skillsByCategory).forEach(([category, skills]) => {
-        const skillNames = (skills as any[]).map(skill => skill.name).join(', ');
-        output += `${category}:${' '.repeat(Math.max(1, 15 - category.length))}${skillNames}\n`;
-      });
+      // Function to create a fancy proficiency bar
+      const createProficiencyBar = (proficiency: number): string => {
+        const fullBlocks = Math.floor(proficiency / 10);
+        const remainingBlock = proficiency % 10 >= 5 ? 1 : 0;
+        const emptyBlocks = 10 - fullBlocks - remainingBlock;
+        
+        return '█'.repeat(fullBlocks) + 
+               (remainingBlock ? '▌' : '') + 
+               '░'.repeat(emptyBlocks);
+      };
 
-      output += '\nProficiency Levels:\n';
-      Object.entries(skillsByCategory).forEach(([category, skills]) => {
-        (skills as any[]).forEach(skill => {
-          const barLength = Math.floor(skill.proficiency / 2);
-          const emptyLength = 50 - barLength;
-          const bar = '█'.repeat(barLength) + '░'.repeat(emptyLength);
-          output += `  ${bar} ${skill.name}\n`;
+      // Function to get proficiency level text
+      const getProficiencyText = (proficiency: number): string => {
+        if (proficiency >= 90) return 'Expert';
+        if (proficiency >= 80) return 'Advanced';
+        if (proficiency >= 60) return 'Intermediate';
+        if (proficiency >= 40) return 'Competent';
+        return 'Beginner';
+      };
+
+      // Function to get category emoji
+      const getCategoryEmoji = (category: string): string => {
+        const emojiMap: { [key: string]: string } = {
+          'Frontend': '🎨',
+          'Backend': '⚙️',
+          'Database': '🗄️',
+          'DevOps': '🚀',
+          'Mobile': '📱',
+          'Languages': '📝',
+          'Tools': '🛠️',
+          'Testing': '🧪',
+          'Cloud': '☁️',
+          'Other': '🔧'
+        };
+        return emojiMap[category] || '📌';
+      };
+
+      // Process each category
+      Object.entries(skillsByCategory).forEach(([category, skills], categoryIndex, categories) => {
+        const emoji = getCategoryEmoji(category);
+        const isLast = categoryIndex === categories.length - 1;
+        
+        // Category header
+        output += `│ ${emoji} ${category}\n│ ${isLast ? '└' : '├'}${'─'.repeat(WIDTH - 4)}\n│\n`;
+        
+        // Sort skills by proficiency
+        const sortedSkills = (skills as any[]).sort((a, b) => b.proficiency - a.proficiency);
+        
+        // Display skills with fancy bars and proficiency levels
+        sortedSkills.forEach((skill, index) => {
+          const bar = createProficiencyBar(skill.proficiency);
+          const level = getProficiencyText(skill.proficiency);
+          const proficiencyText = `${skill.proficiency}% - ${level}`;
+          
+          // Skill name with experience years if available
+          const nameText = skill.yearsOfExperience 
+            ? `${skill.name} (${skill.yearsOfExperience}+ years)`
+            : skill.name;
+          
+          output += `│ ${nameText.padEnd(25)} ${bar} ${proficiencyText.padEnd(20)}\n`;
+          
+          // Add description if available
+          if (skill.description) {
+            const descLines = skill.description.split('\n');
+            descLines.forEach((line: string) => {
+              output += `│ ${' '.repeat(27)}${line}\n`;
+            });
+          }
         });
+        
+        // Add spacing between categories
+        output += '│\n';
       });
+
+      // Add legend at the bottom
+      output += `│ Legend\n│ ${'─'.repeat(WIDTH - 4)}\n│\n`;
+      output += `│ Proficiency Scale:\n`;
+      output += `│ ██████████ Expert      (90-100%)\n`;
+      output += `│ ████████░░ Advanced    (80-89%)\n`;
+      output += `│ ██████░░░░ Intermediate (60-79%)\n`;
+      output += `│ ████░░░░░░ Competent   (40-59%)\n`;
+      output += `│ ██░░░░░░░░ Beginner    (0-39%)\n│`;
 
       return {
         output,
-        success: true,
-        loading: {
-          message: 'Analyzing skill database...',
-          progress: 100,
-          duration: 1500
-        }
+        success: true
       };
     } catch (error) {
       return {
@@ -217,10 +279,10 @@ Last updated: ${bio.lastUpdated ? new Date(bio.lastUpdated).toLocaleDateString()
 
       let output = 'Loading projects...\n';
       output += '[████████████████████████████████████████████████████] 100%\n\n';
-      output += '📂 My Projects:\n\n';
+      output += '📂 Projects:\n\n';
 
       projects.forEach((project: any, index: number) => {
-        output += `[${index + 1}] ${project.title.padEnd(12)} - ${project.description}\n`;
+        output += `  ${(index + 1).toString().padEnd(2)} │ ${project.title}\n`;
       });
 
       output += `\nType 'project [number]' to view details (e.g., 'project 1')`;
@@ -271,26 +333,97 @@ Last updated: ${bio.lastUpdated ? new Date(bio.lastUpdated).toLocaleDateString()
       }
 
       const project = projects[projectIndex];
-      const banner = createProjectBanner(project.title, project.description);
+      const WIDTH = 90;
       
-      let output = banner + '\n\n';
-      if (project.asciiArt) {
-        output += project.asciiArt + '\n\n';
+      // Title - centered, no border
+      let output = `${' '.repeat(Math.floor((WIDTH - project.title.length) / 2))}${project.title.toUpperCase()}${' '.repeat(Math.ceil((WIDTH - project.title.length) / 2))}\n\n`;
+
+      // About section
+      output += '📋 About\n';
+      
+      // Overview with left border
+      output += '│\n│ ✨ Overview:\n│\n';
+      
+      // Description with word wrap and left border
+      const words = project.description.split(' ');
+      let line = '│ ';
+      for (const word of words) {
+        if ((line + word).length > WIDTH - 2) {
+          output += line + '\n';
+          line = '│ ' + word + ' ';
+        } else {
+          line += word + ' ';
+        }
+      }
+      if (line !== '│ ') {
+        output += line + '\n';
+      }
+      output += '│\n';
+
+      // Key Features section
+      if (project.description.includes('✨') || project.description.includes('•')) {
+        output += '│ ✨ Key Features:\n│\n';
+        
+        // Extract and format features
+        const features: string[] = project.description
+          .split('\n')
+          .filter((line: string): boolean => 
+            line.trim().startsWith('•') || 
+            line.trim().startsWith('✨') || 
+            line.trim().startsWith('📚'))
+          .map((feature: string): string => feature.trim());
+        
+        // Display features in a clean list
+        for (const feature of features) {
+          const cleanFeature = feature
+            .replace(/^[•✨📚]\s*/, '') // Remove bullet points
+            .trim();
+          output += `│ ⭐ ${cleanFeature}\n`;
+        }
+        output += '│\n';
+      }
+
+      // Purpose section if it exists in description
+      if (project.description.toLowerCase().includes('purpose')) {
+        output += '│ 🎯 Purpose:\n│\n';
+        const purposeSection = project.description
+          .split('\n')
+          .find((line: string) => line.toLowerCase().includes('purpose'));
+        if (purposeSection) {
+          output += `│ ${purposeSection.replace(/^[^:]+:\s*/, '')}\n│\n`;
+        }
       }
       
-      output += `Description: ${project.description}\n\n`;
-      output += `Tech Stack:  ${project.techStack.join(', ')}\n`;
+      output += '\n';
+
+      // Technologies section
+      output += '🛠️  Technologies\n│\n';
+      const techStackStr = project.techStack.join(', ');
+      output += `│ ${techStackStr}\n`;
+      output += '│\n\n';
       
-      if (project.liveDemo) {
-        output += `Live Demo:   ${project.liveDemo}\n`;
-      }
-      if (project.github) {
-        output += `GitHub:      ${project.github}\n`;
+      // Links section
+      if (project.github || project.liveDemo) {
+        output += '🔗 Links\n│\n';
+        if (project.github) {
+          output += `│ 📦 Repository    ${project.github}\n`;
+        }
+        if (project.liveDemo) {
+          output += `│ 🌐 Live Demo     ${project.liveDemo}\n`;
+        }
+        output += '│\n\n';
       }
       
-      output += `Status:      ${project.status === 'production' ? '✅ Production Ready' : 
-                               project.status === 'development' ? '🚧 In Development' : 
-                               '📦 Archived'}\n\n`;
+      // Status section
+      output += '📊 Project Status\n│\n';
+      const statusEmoji = project.status === 'production' ? '✅' : 
+                         project.status === 'development' ? '🚧' : 
+                         '📦';
+      const statusText = project.status === 'production' ? 'Production Ready' : 
+                        project.status === 'development' ? 'In Development' : 
+                        'Archived';
+      output += `│ ${statusEmoji} ${statusText}\n`;
+      output += '│';
 
       return {
         output,
@@ -307,31 +440,17 @@ Last updated: ${bio.lastUpdated ? new Date(bio.lastUpdated).toLocaleDateString()
   private async handleContact(args: string[]): Promise<CommandResult> {
     if (args.length === 0) {
       return {
-        output: `📮 Interactive Contact Form
-
-To send me a message, use this format:
-contact send "<name>" "<email>" "<message>"
-
-Example:
-contact send "John Doe" "john@example.com" "I'd like to discuss a project opportunity"
-
-Quick contact:
-📧 Email: christopherjoshy4@gmail.com
-🔗 linkedin.com/in/christopher-joshy-272a77290/
-
-I respond to all messages within 24 hours!`,
+        output: `📧 Contact Form\n│\n` +
+          `│ Send me a message using the following format:\n` +
+          `│ contact "Your Name" "Your Email" "Your Message"\n` +
+          `│\n` +
+          `│ Example:\n` +
+          `│ contact "John Doe" "john@example.com" "Hey, let's work together!"`,
         success: true
       };
     }
 
-    if (args[0] === 'send' && args.length >= 4) {
-      return await this.sendContactMessage(args.slice(1));
-    }
-
-    return {
-      output: `❌ Invalid usage. Use 'contact' without arguments to see the correct format.`,
-      success: false
-    };
+    return this.sendContactMessage(args);
   }
 
   private async sendContactMessage(args: string[]): Promise<CommandResult> {
@@ -369,8 +488,31 @@ I respond to all messages within 24 hours!`,
 
     try {
       const messageData = { name, email, message };
-      const response = await apiRequest('POST', '/api/messages', messageData);
-      const result = await response.json();
+      
+      // Send to both backend and Formspree in parallel
+      const [backendResponse, formspreeResponse] = await Promise.all([
+        // Backend API request
+        apiRequest('POST', '/api/messages', messageData),
+        
+        // Formspree API request
+        fetch('https://formspree.io/f/mjkrzrla', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            message: message
+          })
+        })
+      ]);
+
+      // Check if both requests were successful
+      if (!backendResponse.ok || !formspreeResponse.ok) {
+        throw new Error('Failed to send message to one or more endpoints');
+      }
 
       let output = 'Sending message...\n';
       output += '[████████████████████████████████████████████████████] 100%\n\n';
@@ -399,32 +541,33 @@ I respond to all messages within 24 hours!`,
 
   private async handleResume(): Promise<CommandResult> {
     try {
-      const response = await apiRequest('GET', '/api/github-stats');
-      const stats = await response.json();
+      const response = await apiRequest('GET', '/api/resume');
+      const resume = await response.json();
       
-      if (!stats) {
+      if (!resume || !resume.url) {
         return {
-          output: 'No GitHub statistics available. Use the admin panel to add stats.\nRun "admin <password>" to access admin mode.',
+          output: 'Resume information not found. Please try again later.',
           success: false
         };
       }
+
+      let output = `📄 Resume & Stats\n│\n`;
       
-      let output = 'Fetching GitHub statistics...\n';
-      output += '[████████████████████████████████████████████████████] 100%\n\n';
-      output += '📊 GitHub Stats (Resume not implemented yet)\n\n';
-      output += `    ⭐ Total Stars: ${stats.stars}        🔧 Total Commits: ${stats.commits}\n`;
-      output += `    📂 Public Repos: ${stats.repos}       👥 Followers: ${stats.followers}\n`;
-      output += `    🧪 Pull Requests: ${stats.pullRequests}     🐛 Issues Opened: ${stats.issues}\n\n`;
-      output += `Last updated: ${stats.lastUpdated ? new Date(stats.lastUpdated).toLocaleDateString() : 'Unknown'}`;
+      if (resume.githubStats) {
+        output += `│ GitHub Statistics\n│\n`;
+        Object.entries(resume.githubStats).forEach(([key, value]) => {
+          output += `│ ${key.padEnd(20, ' ')} ${value}\n`;
+        });
+        output += '│\n';
+      }
+
+      output += `│ Resume\n│\n` +
+        `│ 📎 View/Download: ${resume.url}\n` +
+        `│ Last updated: ${resume.lastUpdated ? new Date(resume.lastUpdated).toLocaleDateString() : 'Unknown'}\n│`;
 
       return {
         output,
-        success: true,
-        loading: {
-          message: 'Fetching GitHub statistics...',
-          progress: 100,
-          duration: 2000
-        }
+        success: true
       };
     } catch (error) {
       return {
@@ -439,23 +582,22 @@ I respond to all messages within 24 hours!`,
       const response = await apiRequest('GET', '/api/social');
       const links = await response.json();
       
-      if (!links || links.length === 0) {
+      if (!links || !Array.isArray(links) || links.length === 0) {
         return {
-          output: 'No social links found. Use the admin panel to add social links.\nRun "admin <password>" to access admin mode.',
+          output: 'No social links found. Use the admin panel to add social links first.\nRun "admin <password>" to access admin mode.',
           success: false
         };
       }
 
-      let output = '🌐 Social Links & Contact:\n\n';
-      links.forEach((link: any) => {
-        const icon = this.getSocialIcon(link.platform);
-        output += `${icon} ${link.displayName}: ${link.url}\n`;
-      });
+      let output = '🔗 Social Links\n│\n';
       
-      output += '\nConnect with me on these platforms!';
+      links.forEach(link => {
+        const icon = this.getSocialIcon(link.platform);
+        output += `│ ${icon} ${link.platform.charAt(0).toUpperCase() + link.platform.slice(1).padEnd(15, ' ')} ${link.url}\n`;
+      });
 
       return {
-        output,
+        output: output + '│',
         success: true
       };
     } catch (error) {
@@ -468,57 +610,58 @@ I respond to all messages within 24 hours!`,
 
   private async handleFastfetch(): Promise<CommandResult> {
     try {
-      const response = await apiRequest('GET', '/api/ascii-art/fastfetch');
-      const art = await response.json();
+      const lines = ASCII_ART.FASTFETCH.split('\n');
+      let output = '';
       
+      // Add left border to each line
+      lines.forEach((line: string) => {
+        output += `│ ${line}\n`;
+      });
+
       return {
-        output: art?.content || ASCII_ART.FASTFETCH,
+        output,
         success: true
       };
     } catch (error) {
       return {
-        output: ASCII_ART.FASTFETCH,
-        success: true
+        output: 'Failed to load ASCII art. Please try again later.',
+        success: false
       };
     }
   }
 
   private async handleSudo(args: string[]): Promise<CommandResult> {
-    if (args.length === 0) {
-      return {
-        output: 'sudo: command not specified',
-        success: false
-      };
-    }
+    if (args.join(' ') === 'hire-christopher') {
+      const lines = [
+        '🎉 Excellent choice! Here\'s what happens next:',
+        '',
+        '1. Your team gains a passionate developer',
+        '2. Code quality improves dramatically',
+        '3. Projects get shipped faster',
+        '4. Everyone is happier',
+        '',
+        'To proceed with this upgrade, please:',
+        '1. Check out my resume above (run "resume")',
+        '2. Connect on LinkedIn (run "social")',
+        '3. Send me a message (run "contact")',
+        '',
+        'I look forward to creating amazing things together! 🚀'
+      ];
 
-    const command = args.join(' ');
-    if (command === 'hire-christopher') {
-      let output = '[sudo] password for user: ●●●●●●●●\n\n';
-      output += 'Processing hiring request...\n';
-      output += '[████████████████████████████████████████████████████] 100%\n\n';
-      output += ASCII_ART.HIRE_BANNER + '\n\n';
-      output += '✅ Christopher Joshy has been successfully hired!\n';
-      output += '📧 Sending confirmation email to HR department...\n';
-      output += '📋 Generating employment contract...\n';
-      output += '🎊 Celebrating with virtual confetti...\n\n';
-      output += 'Thank you for choosing Christopher Joshy as your next developer!\n';
-      output += 'Contact: christopherjoshy4@gmail.com for next steps.\n\n';
-      output += 'Warning: This command may cause excessive productivity and innovation.\n';
-      output += 'I hate this command but i guess its a good way to troll me ah it hurts 😢';
+      let output = '🔑 Sudo Access Granted\n│\n';
+      lines.forEach((line: string) => {
+        output += line ? `│ ${line}\n` : '│\n';
+      });
+      output += '│';
 
       return {
         output,
-        success: true,
-        loading: {
-          message: 'Processing hiring request...',
-          progress: 100,
-          duration: 3000
-        }
+        success: true
       };
     }
 
     return {
-      output: `sudo: ${command}: command not found`,
+      output: `🚫 Permission denied: Nice try! But 'sudo' only works with 'hire-christopher' 😉`,
       success: false
     };
   }
@@ -764,11 +907,31 @@ Examples:
 
     const [platform, username, url, displayName] = args;
     
+    // Validate platform
+    const validPlatforms = ['github', 'linkedin', 'twitter', 'instagram', 'gmail', 'email', 'youtube', 'portfolio'];
+    if (!validPlatforms.includes(platform.toLowerCase())) {
+      return {
+        output: `❌ Invalid platform. Valid platforms are: ${validPlatforms.join(', ')}`,
+        success: false
+      };
+    }
+
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch (e) {
+      return {
+        output: '❌ Invalid URL format. Please provide a valid URL including http:// or https://',
+        success: false
+      };
+    }
+    
     const socialData = {
-      platform,
+      platform: platform.toLowerCase(),
       username,
       url,
-      displayName: displayName.replace(/"/g, '')
+      displayName: displayName.replace(/"/g, ''),
+      id: `social_${Date.now()}` // Generate a unique ID
     };
 
     try {
@@ -844,8 +1007,8 @@ Examples:
 
   private generateProjectAscii(title: string): string {
     const width = 60;
-    const border = '═'.repeat(width);
-    const paddedTitle = title.toUpperCase().padStart((width + title.length) / 2).padEnd(width);
+    const border = '═'.repeat(width - 2);
+    const paddedTitle = title.toUpperCase().padStart((width + title.length) / 2).padEnd(width - 2);
     
     return `╔${border}╗\n║${paddedTitle}║\n╚${border}╝`;
   }
@@ -1097,45 +1260,6 @@ Use 'edit' for the same functionality.`,
     return this.handleEdit(args);
   }
 
-  private async handleSeed(args: string[]): Promise<CommandResult> {
-    try {
-      let output = 'Initializing database with sample data...\n';
-      output += '[████████████████████████████████████████████████████] 100%\n\n';
-      
-      const response = await apiRequest('POST', '/api/admin/seed');
-      const result = await response.json();
-      
-      if (result.success) {
-        output += '✅ Database seeded successfully!\n\n';
-        output += '📊 Sample data added:\n';
-        output += '• 3 portfolio projects\n';
-        output += '• 14 technical skills across categories\n';
-        output += '• 4 social media links\n';
-        output += '• 2 professional certificates\n';
-        output += '• Personal bio and GitHub statistics\n';
-        output += '• ASCII art for terminal display\n\n';
-        output += 'Use "view projects" or "view skills" to see the data.';
-      } else {
-        output += '❌ Database seeding failed. Please check Firebase connection.';
-      }
-      
-      return {
-        output,
-        success: result.success,
-        loading: {
-          message: 'Seeding database...',
-          progress: 100,
-          duration: 3000
-        }
-      };
-    } catch (error) {
-      return {
-        output: `❌ Failed to seed database: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        success: false
-      };
-    }
-  }
-
   private async handleView(args: string[]): Promise<CommandResult> {
     if (args.length === 0) {
       return {
@@ -1315,7 +1439,7 @@ Examples:
       const response = await apiRequest('GET', '/api/social');
       const links = await response.json();
       
-      if (!links || links.length === 0) {
+      if (!links || !Array.isArray(links) || links.length === 0) {
         return {
           output: '🔗 No social links found. Use "add social" to add your social media profiles.',
           success: true
@@ -1519,47 +1643,54 @@ Always learning and building amazing things!`,
 
   private handleWhoami(): CommandResult {
     return {
-      output: 'christopher-joshy',
+      output: `👤 Current User\n│\n│ Christopher Joshy\n│ Full Stack Developer\n│`,
       success: true
     };
   }
 
   private handlePwd(): CommandResult {
     return {
-      output: '/home/christopher-joshy/portfolio',
+      output: `📂 Current Directory\n│\n│ ${process.cwd()}\n│`,
       success: true
     };
   }
 
   private handleDate(): CommandResult {
     const now = new Date();
-    const dateString = now.toUTCString();
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short'
+    };
+    
     return {
-      output: dateString,
+      output: `📅 Current Time\n│\n│ ${now.toLocaleString('en-US', options)}\n│`,
       success: true
     };
   }
 
   private handleUptime(): CommandResult {
-    const startTime = new Date('2025-08-29'); // Portfolio launch date
-    const now = new Date();
-    const uptime = Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60 * 60 * 24));
-    
+    const uptimeSeconds = process.uptime();
+    const days = Math.floor(uptimeSeconds / (24 * 60 * 60));
+    const hours = Math.floor((uptimeSeconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((uptimeSeconds % (60 * 60)) / 60);
+    const seconds = Math.floor(uptimeSeconds % 60);
+
     return {
-      output: `Portfolio has been running for ${uptime} days, welcoming visitors and showcasing projects.`,
+      output: `⏱️  System Uptime\n│\n│ ${days}d ${hours}h ${minutes}m ${seconds}s\n│`,
       success: true
     };
   }
 
   private handleLs(): CommandResult {
     return {
-      output: `total 8
-drwxr-xr-x 2 christopher-joshy christopher-joshy 4096 Jan 29 06:30 projects/
-drwxr-xr-x 2 christopher-joshy christopher-joshy 4096 Jan 29 06:30 skills/
--rw-r--r-- 1 christopher-joshy christopher-joshy  256 Jan 29 06:30 about.txt
--rw-r--r-- 1 christopher-joshy christopher-joshy  412 Jan 29 06:30 contact.txt
--rw-r--r-- 1 christopher-joshy christopher-joshy  185 Jan 29 06:30 skills.txt
--rw-r--r-- 1 christopher-joshy christopher-joshy 1024 Jan 29 06:30 resume.pdf`,
+      output: `📁 Directory Contents\n│\n` +
+        `│ Available Commands\n│ ├─ help, about, skills\n│ ├─ projects, contact, resume\n│ ├─ social, fastfetch\n│ └─ clear, exit\n│`,
       success: true
     };
   }

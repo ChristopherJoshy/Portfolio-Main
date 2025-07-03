@@ -71,6 +71,13 @@ export const asciiArtSchema = z.object({
   description: z.string().optional(),
 });
 
+export const resumeSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  lastUpdated: z.date().default(() => new Date()),
+  githubStats: githubStatsSchema.omit({ id: true, lastUpdated: true }).optional(),
+});
+
 // Insert schemas
 export const insertProjectSchema = projectSchema.omit({ id: true, createdAt: true });
 export const insertSkillSchema = skillSchema.omit({ id: true });
@@ -80,6 +87,7 @@ export const insertMessageSchema = messageSchema.omit({ id: true, timestamp: tru
 export const insertBioSchema = bioSchema.omit({ id: true, lastUpdated: true });
 export const insertGithubStatsSchema = githubStatsSchema.omit({ id: true, lastUpdated: true });
 export const insertAsciiArtSchema = asciiArtSchema.omit({ id: true });
+export const insertResumeSchema = resumeSchema.omit({ id: true, lastUpdated: true });
 
 // Types
 export type Project = z.infer<typeof projectSchema>;
@@ -90,6 +98,7 @@ export type Message = z.infer<typeof messageSchema>;
 export type Bio = z.infer<typeof bioSchema>;
 export type GithubStats = z.infer<typeof githubStatsSchema>;
 export type AsciiArt = z.infer<typeof asciiArtSchema>;
+export type Resume = z.infer<typeof resumeSchema>;
 
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type InsertSkill = z.infer<typeof insertSkillSchema>;
@@ -99,6 +108,7 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type InsertBio = z.infer<typeof insertBioSchema>;
 export type InsertGithubStats = z.infer<typeof insertGithubStatsSchema>;
 export type InsertAsciiArt = z.infer<typeof insertAsciiArtSchema>;
+export type InsertResume = z.infer<typeof insertResumeSchema>;
 
 export interface TerminalCommand {
   name: string;
